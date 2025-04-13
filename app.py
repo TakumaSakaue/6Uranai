@@ -24,26 +24,62 @@ app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
 # --- モジュールのインポート処理 ---
+def get_module_path(module_name):
+    """モジュールの絶対パスを取得"""
+    try:
+        # 現在のファイルの絶対パスを取得
+        current_file = pathlib.Path(__file__).resolve()
+        logger.debug(f"現在のファイルパス: {current_file}")
+        
+        # modulesディレクトリのパスを構築
+        modules_dir = current_file.parent / 'modules'
+        logger.debug(f"モジュールディレクトリパス: {modules_dir}")
+        
+        # モジュールファイルのパスを構築
+        module_path = modules_dir / f'{module_name}.py'
+        logger.debug(f"モジュールファイルパス: {module_path}")
+        
+        return module_path
+    except Exception as e:
+        logger.error(f"モジュールパスの取得に失敗: {str(e)}")
+        logger.error(traceback.format_exc())
+        return None
+
 def import_module(module_name):
+    """モジュールを動的にインポート"""
     try:
         logger.info(f"{module_name}モジュールのインポートを開始")
         
-        # モジュールのパスを構築
-        module_path = pathlib.Path(__file__).parent / 'modules' / f'{module_name}.py'
-        
+        # モジュールのパスを取得
+        module_path = get_module_path(module_name)
+        if module_path is None:
+            logger.error(f"モジュールパスの取得に失敗: {module_name}")
+            return None
+            
         if not module_path.exists():
             logger.error(f"モジュールファイルが見つかりません: {module_path}")
+            # ディレクトリ内のファイル一覧を表示
+            try:
+                logger.debug(f"ディレクトリ内容: {list(module_path.parent.glob('*'))}")
+            except Exception as e:
+                logger.error(f"ディレクトリ内容の取得に失敗: {str(e)}")
             return None
             
         # モジュールをインポート
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        spec = importlib.util.spec_from_file_location(module_name, str(module_path))
         if spec is None:
             logger.error(f"モジュール仕様の取得に失敗: {module_name}")
             return None
             
         module = importlib.util.module_from_spec(spec)
         sys.modules[module_name] = module
-        spec.loader.exec_module(module)
+        
+        try:
+            spec.loader.exec_module(module)
+        except Exception as e:
+            logger.error(f"モジュールの実行に失敗: {str(e)}")
+            logger.error(traceback.format_exc())
+            return None
         
         logger.info(f"{module_name}モジュールのインポートが完了")
         return module
@@ -53,32 +89,47 @@ def import_module(module_name):
         return None
 
 def load_modules():
+    """必要なモジュールをすべてロード"""
     try:
         logger.info("モジュールのインポートを開始")
         
-        # 各モジュールをインポート
-        kyusei = import_module('kyusei')
-        doubutsu = import_module('doubutsu')
-        inyou = import_module('inyou')
-        shichuu = import_module('shichuu')
+        # 現在の環境情報をログ出力
+        logger.debug(f"現在の作業ディレクトリ: {os.getcwd()}")
+        logger.debug(f"PYTHONPATH: {sys.path}")
+        logger.debug(f"環境変数: {dict(os.environ)}")
         
-        if None in (kyusei, doubutsu, inyou, shichuu):
-            logger.error("一部のモジュールのインポートに失敗")
-            return None, None, None, None, None
+        # 各モジュールをインポート
+        modules = {}
+        for module_name in ['kyusei', 'doubutsu', 'inyou', 'shichuu']:
+            module = import_module(module_name)
+            if module is None:
+                logger.error(f"{module_name}モジュールのインポートに失敗")
+                return None, None, None, None, None
+            modules[module_name] = module
         
         # 必要な関数を取得
-        calculate_honmei = getattr(kyusei, 'calculate_honmei', None)
-        calculate_gatsumei = getattr(kyusei, 'calculate_gatsumei', None)
-        calculate_animal_fortune = getattr(doubutsu, 'calculate_animal_fortune', None)
-        calculate_inyou_gogyo = getattr(inyou, 'calculate_inyou_gogyo', None)
-        calculate_shichuu = getattr(shichuu, 'calculate_shichuu', None)
+        functions = {
+            'calculate_honmei': getattr(modules['kyusei'], 'calculate_honmei', None),
+            'calculate_gatsumei': getattr(modules['kyusei'], 'calculate_gatsumei', None),
+            'calculate_animal_fortune': getattr(modules['doubutsu'], 'calculate_animal_fortune', None),
+            'calculate_inyou_gogyo': getattr(modules['inyou'], 'calculate_inyou_gogyo', None),
+            'calculate_shichuu': getattr(modules['shichuu'], 'calculate_shichuu', None)
+        }
         
-        if None in (calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu):
-            logger.error("必要な関数が見つかりません")
+        # 必要な関数が全て存在するか確認
+        missing_functions = [name for name, func in functions.items() if func is None]
+        if missing_functions:
+            logger.error(f"以下の関数が見つかりません: {missing_functions}")
             return None, None, None, None, None
             
         logger.info("全モジュールが正常にロードされました")
-        return calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu
+        return (
+            functions['calculate_honmei'],
+            functions['calculate_gatsumei'],
+            functions['calculate_animal_fortune'],
+            functions['calculate_inyou_gogyo'],
+            functions['calculate_shichuu']
+        )
     except Exception as e:
         logger.error(f"モジュールのインポートに失敗: {e}")
         logger.error(traceback.format_exc())
@@ -183,6 +234,4 @@ def index():
         return jsonify({"error": "フロントエンドファイルが見つかりません"}), 404
 
 # Vercel Serverless環境用のエントリーポイント
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5003))
-    app.run(host='127.0.0.1', port=port, debug=True) 
+app.debug = True 
