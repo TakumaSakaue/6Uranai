@@ -153,77 +153,80 @@
         document.getElementById('fortune-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const birthdate = document.getElementById('birth-date').value;
-            const [year, month, day] = birthdate.split('-').map(Number);
+            const resultDiv = document.getElementById('result');
+            const errorDiv = document.getElementById('error');
+            resultDiv.innerHTML = '計算中...';
+            errorDiv.innerHTML = '';
             
             try {
+                const dateInput = document.getElementById('birth-date').value;
+                const [year, month, day] = dateInput.split('-').map(Number);
+                
+                if (!year || !month || !day) {
+                    throw new Error('生年月日を正しく入力してください');
+                }
+                
                 const response = await fetch('/api/predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        year: year,
-                        month: month,
-                        day: day
-                    })
+                    body: JSON.stringify({ year, month, day })
                 });
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `サーバーエラー: ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                if (data.error) {
-                    document.getElementById('error-area').style.display = 'block';
-                    document.getElementById('error-area').textContent = data.error;
-                    return;
+                // 各占いの結果をチェック
+                let hasError = false;
+                let resultHTML = '';
+                
+                // 四柱推命の結果
+                if (data.shichuu && !data.shichuu.error) {
+                    resultHTML += `<h3>四柱推命</h3><p>${JSON.stringify(data.shichuu, null, 2)}</p>`;
+                } else if (data.shichuu && data.shichuu.error) {
+                    hasError = true;
+                    errorDiv.innerHTML += `<p>四柱推命の計算エラー: ${data.shichuu.error}</p>`;
                 }
                 
-                document.getElementById('error-area').style.display = 'none';
-                document.getElementById('error-area').textContent = '';
+                // 九星気学の結果
+                if (data.kyusei && !data.kyusei.error) {
+                    resultHTML += `<h3>九星気学</h3><p>本命星: ${data.kyusei.honmei}<br>月命星: ${data.kyusei.gatsumei}</p>`;
+                } else if (data.kyusei && data.kyusei.error) {
+                    hasError = true;
+                    errorDiv.innerHTML += `<p>九星気学の計算エラー: ${data.kyusei.error}</p>`;
+                }
                 
-                // 結果エリアをクリア
-                document.querySelectorAll('.result-section').forEach(section => {
-                    section.style.display = 'none';
-                });
+                // どうぶつ占いの結果
+                if (data.animal && !data.animal.error) {
+                    resultHTML += `<h3>どうぶつ占い</h3><p>${data.animal}</p>`;
+                } else if (data.animal && data.animal.error) {
+                    hasError = true;
+                    errorDiv.innerHTML += `<p>どうぶつ占いの計算エラー: ${data.animal.error}</p>`;
+                }
                 
-                displayResults(data);
-
-                // 九星気学の結果を表示
-                if (data.kyusei) {
-                    document.getElementById('honmei').textContent = data.kyusei.honmei;
-                    document.getElementById('gatsumei').textContent = data.kyusei.gatsumei;
-                    document.getElementById('kyusei-result').style.display = 'block';
+                // 陰陽五行の結果
+                if (data.inyou && !data.inyou.error) {
+                    resultHTML += `<h3>陰陽五行</h3><p>${JSON.stringify(data.inyou, null, 2)}</p>`;
+                } else if (data.inyou && data.inyou.error) {
+                    hasError = true;
+                    errorDiv.innerHTML += `<p>陰陽五行の計算エラー: ${data.inyou.error}</p>`;
                 }
-
-                // 宿曜は常に表示
-                document.getElementById('sukuyo-result').style.display = 'block';
-
-                // 西洋占星術の結果を表示
-                if (data.western) {
-                    document.getElementById('sun-sign').textContent = data.western.sun_sign;
-                    document.getElementById('moon-sign').textContent = data.western.moon_sign;
-                    document.getElementById('western-result').style.display = 'block';
+                
+                if (!hasError) {
+                    resultDiv.innerHTML = resultHTML;
+                } else {
+                    resultDiv.innerHTML = '一部の計算に失敗しました。詳細は上記のエラーメッセージをご確認ください。';
                 }
-
-                // どうぶつ占いの結果を表示
-                if (data.animal) {
-                    document.getElementById('animal').textContent = data.animal.animal;
-                    document.getElementById('animal-result').style.display = 'block';
-                }
-
-                // 陰陽五行の結果を表示
-                if (data.inyou) {
-                    document.getElementById('gogyo').textContent = data.inyou.gogyo;
-                    document.getElementById('inyo').textContent = data.inyou.inyo;
-                    document.getElementById('inyou-result').style.display = 'block';
-                }
+                
             } catch (error) {
-                console.error('エラー:', error);
-                document.getElementById('error-area').style.display = 'block';
-                document.getElementById('error-area').textContent = `エラーが発生しました: ${error.message}`;
+                console.error('Error:', error);
+                errorDiv.innerHTML = `<p class="error">エラーが発生しました: ${error.message}</p>`;
+                resultDiv.innerHTML = '';
             }
         });
 
