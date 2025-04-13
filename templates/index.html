@@ -157,7 +157,7 @@
             const [year, month, day] = birthdate.split('-').map(Number);
             
             try {
-                const response = await fetch('/predict', {
+                const response = await fetch('/api/predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -169,14 +169,25 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.error) {
+                    document.getElementById('error-area').style.display = 'block';
                     document.getElementById('error-area').textContent = data.error;
                     return;
                 }
                 
+                document.getElementById('error-area').style.display = 'none';
                 document.getElementById('error-area').textContent = '';
+                
+                // 結果エリアをクリア
+                document.querySelectorAll('.result-section').forEach(section => {
+                    section.style.display = 'none';
+                });
                 
                 displayResults(data);
 
@@ -211,7 +222,8 @@
                 }
             } catch (error) {
                 console.error('エラー:', error);
-                document.getElementById('error-area').textContent = 'エラーが発生しました。';
+                document.getElementById('error-area').style.display = 'block';
+                document.getElementById('error-area').textContent = `エラーが発生しました: ${error.message}`;
             }
         });
 
