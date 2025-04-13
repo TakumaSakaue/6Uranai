@@ -3,68 +3,37 @@
 """
 from flask import Flask, request, jsonify, render_template, send_from_directory
 from datetime import datetime
-import pytz # western.py 内でも使われるが、明示的にインポートしておくとわかりやすい場合がある
+import pytz
 import os
-import traceback # エラー詳細ログ用
-import argparse # コマンドライン引数用
+import traceback
 
 # --- 占いモジュールをインポート ---
-# 各ファイルが存在し、指定された関数が定義されている必要があります
 try:
     from modules.kyusei import KyuseiFortune, calculate_kyusei, calculate_honmei, calculate_gatsumei
-    from modules.western import calculate_astrology, _initialize_skyfield, _loader as skyfield_loader # 初期化とクローズ用にloaderもインポート
+    from modules.western import calculate_astrology, _initialize_skyfield, _loader as skyfield_loader
     from modules.doubutsu import calculate_animal_fortune
     from modules.inyou import calculate_inyou_gogyo
     from modules.shichuu import calculate_shichuu
 except ImportError as e:
     print(f"FATAL: 占いモジュールのインポートに失敗しました: {e}")
     print("kyusei.py, western.py, doubutsu.py, inyou.py, shichuu.py が同じディレクトリに存在するか確認してください。")
-    exit(1) # 起動時エラーなので終了
+    exit(1)
 
 # --- Flaskアプリケーションの作成 ---
 app = Flask(__name__)
 
 # --- Skyfieldの初期化 ---
-# 環境変数 SKYFIELD_DATA_DIR があればそれを使用、なければ 'skyfield-data' を使用
-SKYFIELD_DATA_DIR = os.environ.get("SKYFIELD_DATA_DIR", "skyfield-data")
-# データディレクトリが存在しない場合は作成
+SKYFIELD_DATA_DIR = os.path.join(os.path.dirname(__file__), "skyfield-data")
 os.makedirs(SKYFIELD_DATA_DIR, exist_ok=True)
 print(f"Skyfieldデータディレクトリ: {SKYFIELD_DATA_DIR}")
 try:
-    # western.py内の初期化関数を呼び出す
     _initialize_skyfield(SKYFIELD_DATA_DIR)
 except Exception as e:
     print(f"FATAL: Skyfieldの初期化に失敗しました: {e}")
     traceback.print_exc()
-    # 本番環境ではここで起動を停止するか、エラー状態を示すフラグを立てる
-    exit(1)
-
-# --- ヘルパー関数: 日付検証 ---
-def validate_birthdate(date_str):
-    """
-    YYYY-MM-DD形式の日付文字列を検証し、datetimeオブジェクトを返す。
-    不正な形式や未来の日付の場合はNoneを返す。
-    """
-    if not date_str:
-        return None
-    try:
-        birth_dt = datetime.strptime(date_str, "%Y-%m-%d")
-        # 簡単な未来日付チェック (当日を含む場合は <= にする)
-        # タイムゾーンを考慮しない単純比較
-        if birth_dt.date() > datetime.now().date():
-            print(f"検証エラー: 未来の日付です - {date_str}")
-            return None
-        # ここで年の範囲チェックなども追加可能 (例: 1900年以降など)
-        # if birth_dt.year < 1900:
-        #     print(f"検証エラー: 年が範囲外です - {birth_dt.year}")
-        #     return None
-        return birth_dt
-    except ValueError:
-        print(f"検証エラー: 日付フォーマットが不正です - {date_str}")
-        return None
 
 # --- APIエンドポイント: /predict (占い実行) ---
-@app.route('/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def predict():
     try:
         data = request.get_json()
@@ -120,33 +89,11 @@ def predict():
 # --- ルートエンドポイント: / (HTML配信) ---
 @app.route('/')
 def index():
-    """
-    ルートパスにアクセスされた際に index.html を返す。
-    index.html は templates ディレクトリにある想定。
-    """
     try:
         return render_template('index.html')
-    except FileNotFoundError:
-        print("エラー: index.html が見つかりません。")
+    except Exception as e:
+        print(f"エラー: {str(e)}")
         return jsonify({"error": "フロントエンドファイルが見つかりません。"}), 404
 
-# --- アプリケーション終了時の処理 (Skyfield Loader クローズ) ---
-@app.teardown_appcontext
-def close_skyfield_loader(exception=None):
-    """
-    リクエスト処理後やアプリ終了時にSkyfieldのLoaderを閉じる。
-    """
-    global skyfield_loader # western.py からインポートした Loader インスタンス
-    if skyfield_loader:
-        try:
-            skyfield_loader.close()
-            print("Skyfield Loader closed.")
-        except Exception as e:
-            print(f"Skyfield Loaderのクローズ中にエラー: {e}")
-
-# --- Flaskアプリの実行 ---
-if __name__ == '__main__':
-    print("Skyfield initialized.")
-    print("サーバーを起動します: http://127.0.0.1:8080")
-    app.run(host='127.0.0.1', port=8080, debug=True)
-    # 本番環境では Gunicorn や uWSGI などのWSGIサーバーを使用し、debug=False にする 
+# Vercel Serverless環境用のエントリーポイント
+app.debug = False 
