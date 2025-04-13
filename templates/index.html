@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>6つの占い診断</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+        }
+        input[type="date"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #error-area {
+            color: #ff0000;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #ffe6e6;
+            display: none;
+        }
+        #result-area {
+            margin-top: 20px;
+        }
+        .fortune-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .fortune-card h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .fortune-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        .fortune-section {
+            display: none;
+        }
+        .fortune-content {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>6つの占い診断</h1>
+    
+    <div class="form-container">
+        <form id="fortune-form">
+            <div class="form-group">
+                <label for="birth-date">生年月日を選択してください：</label>
+                <input type="date" id="birth-date" name="birth-date" required>
+            </div>
+            <button type="submit">診断する</button>
+        </form>
+    </div>
+
+    <div id="error-area"></div>
+    <div id="result-area">
+        <div class="result-section" id="shichuu-result">
+            <h3>四柱推命</h3>
+            <div class="result-content">
+                <p>日干: <span id="day-tian-gan"></span></p>
+                <p>十二運: <span id="day-twelve-operation"></span></p>
+                <p>宿命星: <span id="month-gan-destiny-star"></span></p>
+            </div>
+        </div>
+
+        <div class="result-section" id="kyusei-result">
+            <h3>九星気学</h3>
+            <div class="result-content">
+                <p>本命星: <span id="honmei"></span></p>
+                <p>月命星: <span id="gatsumei"></span></p>
+            </div>
+        </div>
+
+        <div class="result-section" id="sukuyo-result">
+            <h3>宿曜</h3>
+            <div class="result-content">
+                <p>宿曜: <span id="sukuyo"></span></p>
+            </div>
+        </div>
+
+        <div class="result-section" id="western-result">
+            <h3>西洋占星術</h3>
+            <div class="result-content">
+                <p>太陽星座: <span id="sun-sign"></span></p>
+                <p>月星座: <span id="moon-sign"></span></p>
+            </div>
+        </div>
+
+        <div class="result-section" id="animal-result">
+            <h3>どうぶつ占い</h3>
+            <div class="result-content">
+                <p>動物: <span id="animal"></span></p>
+            </div>
+        </div>
+
+        <div class="result-section" id="inyou-result">
+            <h3>陰陽五行</h3>
+            <div class="result-content">
+                <p>五行: <span id="gogyo"></span></p>
+                <p>陰陽: <span id="inyo"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fortune-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const birthdate = document.getElementById('birth-date').value;
+            const [year, month, day] = birthdate.split('-').map(Number);
+            
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        year: year,
+                        month: month,
+                        day: day
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    document.getElementById('error-area').textContent = data.error;
+                    return;
+                }
+                
+                document.getElementById('error-area').textContent = '';
+                
+                displayResults(data);
+
+                // 九星気学の結果を表示
+                if (data.kyusei) {
+                    document.getElementById('honmei').textContent = data.kyusei.honmei;
+                    document.getElementById('gatsumei').textContent = data.kyusei.gatsumei;
+                    document.getElementById('kyusei-result').style.display = 'block';
+                }
+
+                // 宿曜は常に表示
+                document.getElementById('sukuyo-result').style.display = 'block';
+
+                // 西洋占星術の結果を表示
+                if (data.western) {
+                    document.getElementById('sun-sign').textContent = data.western.sun_sign;
+                    document.getElementById('moon-sign').textContent = data.western.moon_sign;
+                    document.getElementById('western-result').style.display = 'block';
+                }
+
+                // どうぶつ占いの結果を表示
+                if (data.animal) {
+                    document.getElementById('animal').textContent = data.animal.animal;
+                    document.getElementById('animal-result').style.display = 'block';
+                }
+
+                // 陰陽五行の結果を表示
+                if (data.inyou) {
+                    document.getElementById('gogyo').textContent = data.inyou.gogyo;
+                    document.getElementById('inyo').textContent = data.inyou.inyo;
+                    document.getElementById('inyou-result').style.display = 'block';
+                }
+            } catch (error) {
+                console.error('エラー:', error);
+                document.getElementById('error-area').textContent = 'エラーが発生しました。';
+            }
+        });
+
+        function displayResults(data) {
+            // 四柱推命の結果表示
+            if (data.shichuu) {
+                document.getElementById('day-tian-gan').textContent = data.shichuu.day_tian_gan;
+                document.getElementById('day-twelve-operation').textContent = data.shichuu.day_twelve_operation;
+                document.getElementById('month-gan-destiny-star').textContent = data.shichuu.month_gan_destiny_star;
+                document.getElementById('shichuu-result').style.display = 'block';
+            }
+
+            // 九星気学の結果表示
+            if (data.kyusei) {
+                document.getElementById('honmei').textContent = data.kyusei.honmei;
+                document.getElementById('gatsumei').textContent = data.kyusei.gatsumei;
+                document.getElementById('kyusei-result').style.display = 'block';
+            }
+
+            // 宿曜の結果表示
+            if (data.sukuyo) {
+                document.getElementById('sukuyo').textContent = data.sukuyo.sukuyo || '';
+                document.getElementById('sukuyo-result').style.display = 'block';
+            }
+
+            // 西洋占星術の結果表示
+            if (data.western) {
+                document.getElementById('sun-sign').textContent = data.western.sun_sign;
+                document.getElementById('moon-sign').textContent = data.western.moon_sign;
+                document.getElementById('western-result').style.display = 'block';
+            }
+
+            // どうぶつ占いの結果表示
+            if (data.animal) {
+                document.getElementById('animal').textContent = data.animal.animal;
+                document.getElementById('animal-result').style.display = 'block';
+            }
+
+            // 陰陽五行の結果表示
+            if (data.inyou) {
+                document.getElementById('gogyo').textContent = data.inyou.gogyo;
+                document.getElementById('inyo').textContent = data.inyou.inyo;
+                document.getElementById('inyou-result').style.display = 'block';
+            }
+        }
+    </script>
+</body>
+</html> 
