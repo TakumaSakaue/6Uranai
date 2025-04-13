@@ -8,6 +8,8 @@ import traceback
 import logging
 import sys
 from werkzeug.middleware.proxy_fix import ProxyFix
+import importlib.util
+import pathlib
 
 # --- ロギングの設定 ---
 logging.basicConfig(
@@ -21,25 +23,63 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
-# --- 占いモジュールをインポート ---
+# --- モジュールのインポート処理 ---
+def import_module(module_name):
+    try:
+        logger.info(f"{module_name}モジュールのインポートを開始")
+        
+        # モジュールのパスを構築
+        module_path = pathlib.Path(__file__).parent / 'modules' / f'{module_name}.py'
+        
+        if not module_path.exists():
+            logger.error(f"モジュールファイルが見つかりません: {module_path}")
+            return None
+            
+        # モジュールをインポート
+        spec = importlib.util.spec_from_file_location(module_name, module_path)
+        if spec is None:
+            logger.error(f"モジュール仕様の取得に失敗: {module_name}")
+            return None
+            
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        
+        logger.info(f"{module_name}モジュールのインポートが完了")
+        return module
+    except Exception as e:
+        logger.error(f"{module_name}モジュールのインポートでエラー: {str(e)}")
+        logger.error(traceback.format_exc())
+        return None
+
 def load_modules():
     try:
         logger.info("モジュールのインポートを開始")
-        from modules.kyusei import calculate_honmei, calculate_gatsumei
-        logger.debug("九星気学モジュールをロード完了")
         
-        from modules.doubutsu import calculate_animal_fortune
-        logger.debug("動物占いモジュールをロード完了")
+        # 各モジュールをインポート
+        kyusei = import_module('kyusei')
+        doubutsu = import_module('doubutsu')
+        inyou = import_module('inyou')
+        shichuu = import_module('shichuu')
         
-        from modules.inyou import calculate_inyou_gogyo
-        logger.debug("陰陽五行モジュールをロード完了")
+        if None in (kyusei, doubutsu, inyou, shichuu):
+            logger.error("一部のモジュールのインポートに失敗")
+            return None, None, None, None, None
         
-        from modules.shichuu import calculate_shichuu
-        logger.debug("四柱推命モジュールをロード完了")
+        # 必要な関数を取得
+        calculate_honmei = getattr(kyusei, 'calculate_honmei', None)
+        calculate_gatsumei = getattr(kyusei, 'calculate_gatsumei', None)
+        calculate_animal_fortune = getattr(doubutsu, 'calculate_animal_fortune', None)
+        calculate_inyou_gogyo = getattr(inyou, 'calculate_inyou_gogyo', None)
+        calculate_shichuu = getattr(shichuu, 'calculate_shichuu', None)
         
+        if None in (calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu):
+            logger.error("必要な関数が見つかりません")
+            return None, None, None, None, None
+            
         logger.info("全モジュールが正常にロードされました")
         return calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu
-    except ImportError as e:
+    except Exception as e:
         logger.error(f"モジュールのインポートに失敗: {e}")
         logger.error(traceback.format_exc())
         return None, None, None, None, None
