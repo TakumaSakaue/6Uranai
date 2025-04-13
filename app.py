@@ -3,28 +3,36 @@
 """
 from flask import Flask, request, jsonify, render_template
 from datetime import datetime
-import pytz
 import os
-import traceback
 
 # --- Flaskアプリケーションの作成 ---
 app = Flask(__name__)
 
 # --- 占いモジュールをインポート ---
-try:
-    from modules.kyusei import calculate_honmei, calculate_gatsumei
-    from modules.doubutsu import calculate_animal_fortune
-    from modules.inyou import calculate_inyou_gogyo
-    from modules.shichuu import calculate_shichuu
-except ImportError as e:
-    print(f"FATAL: 占いモジュールのインポートに失敗しました: {e}")
-    print("必要なモジュールが存在するか確認してください。")
+def load_modules():
+    try:
+        from modules.kyusei import calculate_honmei, calculate_gatsumei
+        from modules.doubutsu import calculate_animal_fortune
+        from modules.inyou import calculate_inyou_gogyo
+        from modules.shichuu import calculate_shichuu
+        return calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu
+    except ImportError as e:
+        print(f"モジュールのインポートに失敗: {e}")
+        return None, None, None, None, None
 
-# --- APIエンドポイント: /predict (占い実行) ---
+# --- APIエンドポイント: /api/predict (占い実行) ---
 @app.route('/api/predict', methods=['POST'])
 def predict():
     try:
+        # モジュールの動的ロード
+        calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu = load_modules()
+        if None in (calculate_honmei, calculate_gatsumei, calculate_animal_fortune, calculate_inyou_gogyo, calculate_shichuu):
+            return jsonify({'error': 'モジュールの読み込みに失敗しました'}), 500
+
         data = request.get_json()
+        if not data:
+            return jsonify({'error': 'JSONデータが見つかりません'}), 400
+
         year = data.get('year')
         month = data.get('month')
         day = data.get('day')
@@ -60,7 +68,7 @@ def predict():
         })
         
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': f'予期せぬエラーが発生しました: {str(e)}'}), 500
 
 # --- ルートエンドポイント: / (HTML配信) ---
 @app.route('/')
@@ -68,7 +76,7 @@ def index():
     try:
         return render_template('index.html')
     except Exception as e:
-        return jsonify({"error": "フロントエンドファイルが見つかりません。"}), 404
+        return jsonify({"error": "フロントエンドファイルが見つかりません"}), 404
 
 # Vercel Serverless環境用のエントリーポイント
 app.debug = False 
