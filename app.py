@@ -66,12 +66,33 @@ def predict():
         # 四柱推命の計算
         shichuu_result = calculate_shichuu(year, month, day)
         
+        # 九星気学の計算
+        honmei = calculate_honmei(year, month, day)
+        gatsumei = calculate_gatsumei(year, month, day)
+        kyusei_result = {
+            "honmei": honmei,
+            "gatsumei": gatsumei
+        }
+        
+        # 宿曜の計算
+        sukuyo_result = calculate_sukuyo(year, month, day)
+        
+        # 西洋占星術の計算
+        western_result = calculate_western_astrology(year, month, day)
+        
         # どうぶつ占いの計算
         animal_result = calculate_animal_fortune(year, month, day)
+        
+        # 陰陽五行の計算
+        inyou_result = calculate_inyou_gogyo(year, month, day)
 
         return jsonify({
             "shichuu": shichuu_result,
-            "animal": {"animal_character": animal_result}
+            "kyusei": kyusei_result,
+            "sukuyo": sukuyo_result,
+            "western": western_result,
+            "animal": {"animal_character": animal_result},
+            "inyou": inyou_result
         })
 
     except Exception as e:
