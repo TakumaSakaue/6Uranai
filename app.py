@@ -54,49 +54,86 @@ def predict():
     try:
         data = request.get_json()
         if not data:
+            logger.error("リクエストデータが空です")
             return jsonify({"error": "データがありません"}), 400
 
         year = int(data.get('year', 0))
         month = int(data.get('month', 0))
         day = int(data.get('day', 0))
 
+        logger.info(f"入力データ: year={year}, month={month}, day={day}")
+
         if not all([year, month, day]):
+            logger.error(f"不正な入力データ: year={year}, month={month}, day={day}")
             return jsonify({"error": "生年月日が正しく指定されていません"}), 400
 
         # 四柱推命の計算
-        shichuu_result = calculate_shichuu(year, month, day)
+        try:
+            shichuu_result = calculate_shichuu(year, month, day)
+            logger.info(f"四柱推命の計算結果: {shichuu_result}")
+        except Exception as e:
+            logger.error(f"四柱推命の計算でエラー: {str(e)}")
+            shichuu_result = {"error": "四柱推命の計算に失敗しました"}
         
         # 九星気学の計算
-        honmei = calculate_honmei(year, month, day)
-        gatsumei = calculate_gatsumei(year, month, day)
-        kyusei_result = {
-            "honmei": honmei,
-            "gatsumei": gatsumei
-        }
+        try:
+            honmei = calculate_honmei(year, month, day)
+            gatsumei = calculate_gatsumei(year, month, day)
+            kyusei_result = {
+                "honmei": honmei,
+                "gatsumei": gatsumei
+            }
+            logger.info(f"九星気学の計算結果: {kyusei_result}")
+        except Exception as e:
+            logger.error(f"九星気学の計算でエラー: {str(e)}")
+            kyusei_result = {"error": "九星気学の計算に失敗しました"}
         
         # 宿曜の計算
-        sukuyo_result = calculate_sukuyo(year, month, day)
+        try:
+            sukuyo_result = calculate_sukuyo(year, month, day)
+            logger.info(f"宿曜の計算結果: {sukuyo_result}")
+        except Exception as e:
+            logger.error(f"宿曜の計算でエラー: {str(e)}")
+            sukuyo_result = {"error": "宿曜の計算に失敗しました"}
         
         # 西洋占星術の計算
-        western_result = calculate_western_astrology(year, month, day)
+        try:
+            western_result = calculate_western_astrology(year, month, day)
+            logger.info(f"西洋占星術の計算結果: {western_result}")
+        except Exception as e:
+            logger.error(f"西洋占星術の計算でエラー: {str(e)}")
+            western_result = {"error": "西洋占星術の計算に失敗しました"}
         
         # どうぶつ占いの計算
-        animal_result = calculate_animal_fortune(year, month, day)
+        try:
+            animal_result = calculate_animal_fortune(year, month, day)
+            logger.info(f"どうぶつ占いの計算結果: {animal_result}")
+        except Exception as e:
+            logger.error(f"どうぶつ占いの計算でエラー: {str(e)}")
+            animal_result = "不明な動物"
         
         # 陰陽五行の計算
-        inyou_result = calculate_inyou_gogyo(year, month, day)
+        try:
+            inyou_result = calculate_inyou_gogyo(year, month, day)
+            logger.info(f"陰陽五行の計算結果: {inyou_result}")
+        except Exception as e:
+            logger.error(f"陰陽五行の計算でエラー: {str(e)}")
+            inyou_result = {"error": "陰陽五行の計算に失敗しました"}
 
-        return jsonify({
+        response_data = {
             "shichuu": shichuu_result,
             "kyusei": kyusei_result,
             "sukuyo": sukuyo_result,
             "western": western_result,
             "animal": {"animal_character": animal_result},
             "inyou": inyou_result
-        })
+        }
+        logger.info(f"レスポンスデータ: {response_data}")
+        return jsonify(response_data)
 
     except Exception as e:
-        logger.error(f"エラーが発生しました: {str(e)}")
+        logger.error(f"予期せぬエラーが発生: {str(e)}")
+        logger.error(traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 # --- ルートエンドポイント: / (HTML配信) ---
