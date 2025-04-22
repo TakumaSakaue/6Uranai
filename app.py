@@ -10,6 +10,14 @@ from werkzeug.serving import WSGIRequestHandler
 import signal
 import sys
 
+# 占いモジュールのインポート
+from modules.shichuu import calculate_shichuu
+from modules.kyusei import calculate_honmei, calculate_gatsumei
+from modules.sukuyo import calculate_sukuyo
+from modules.western import calculate_western_astrology
+from modules.doubutsu import calculate_animal_fortune
+from modules.inyou import calculate_inyou_gogyo
+
 # --- ロギングの設定 ---
 logging.basicConfig(
     level=logging.DEBUG,
