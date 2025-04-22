@@ -1,8 +1,10 @@
 """
-宿曜（星宿）計算モジュール
+宿曜占いの計算を行うモジュール
 """
 import re
-from qreki import Kyureki
+from datetime import datetime
+import pytz
+from koyomi import Kyureki
 
 # 宿曜（星宿）の名称リスト（27宿）
 mansion_names = [
