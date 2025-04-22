@@ -61,17 +61,20 @@ def calculate_sukuyo(year, month, day):
         lunar_date = koyomi.to_lunar_date(year, month, day)
         
         # 旧暦の月日を取得
-        old_day = lunar_date.day
-        lunar_month = lunar_date.month
+        old_day = int(lunar_date.day)
+        lunar_month = int(lunar_date.month)
         
         # 宿曜を計算
         mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
         
         return {
-            "mansion": mansion
+            "mansion": mansion,
+            "lunar_date": f"{lunar_date.year}年{lunar_month}月{old_day}日",
+            "base": base
         }
         
     except Exception as e:
+        print(f"宿曜計算エラー: {str(e)}")  # デバッグ用
         return {
             "error": f"計算エラー: {str(e)}",
             "mansion": "不明"
