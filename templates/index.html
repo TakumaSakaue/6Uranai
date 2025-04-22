@@ -10,199 +10,436 @@
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
+            color: #2c3e50;
         }
         h1 {
-            color: #333;
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
+            font-size: 2.5em;
+            font-weight: 700;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+        }
+        h1 a {
+            color: #2c3e50;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+        h1 a:hover {
+            color: #4CAF50;
+            transform: translateY(-2px);
+            background-color: rgba(76, 175, 80, 0.1);
         }
         .form-container {
             background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+        .form-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
         }
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
-            color: #666;
+            margin-bottom: 8px;
+            color: #34495e;
+            font-weight: 500;
+            font-size: 1.1em;
         }
-        input[type="date"] {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+        .date-select-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        select {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
             font-size: 16px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        select:focus {
+            border-color: #4CAF50;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+        }
+        select:hover {
+            border-color: #4CAF50;
         }
         button {
             background-color: #4CAF50;
             color: white;
-            padding: 10px 20px;
+            padding: 15px 30px;
             border: none;
-            border-radius: 4px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 1.1em;
             width: 100%;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
         button:hover {
             background-color: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
         }
-        #error {
-            color: #ff0000;
-            margin: 10px 0;
-            padding: 10px;
-            border-radius: 4px;
-            background-color: #ffe6e6;
-        }
-        #result {
-            margin-top: 20px;
-            background-color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .fortune-section {
-            margin-bottom: 20px;
+        #error-area {
+            color: #e74c3c;
+            margin: 15px 0;
             padding: 15px;
-            border-bottom: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #fdf0ef;
+            display: none;
+            font-weight: 500;
         }
-        .fortune-section:last-child {
-            border-bottom: none;
+        #result-area {
+            margin-top: 30px;
         }
-        .fortune-section h3 {
-            color: #333;
+        .fortune-card {
+            background-color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            border-left: 5px solid #4CAF50;
+        }
+        .fortune-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        }
+        .fortune-card h2 {
+            color: #2c3e50;
             margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 700;
         }
-        pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background-color: #f8f8f8;
-            padding: 10px;
-            border-radius: 4px;
+        .fortune-card p {
+            color: #34495e;
+            line-height: 1.8;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+        .fortune-content {
+            margin-bottom: 15px;
+        }
+        .date-display {
+            text-align: center;
+            margin: 30px 0;
+            padding: 20px;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            border-bottom: 3px solid #4CAF50;
+        }
+        .date-text {
+            font-size: 1.4em;
+            margin: 0;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .loading-spinner {
+            border: 4px solid #e9ecef;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        .loading p {
+            margin-top: 15px;
+            color: #2c3e50;
+            font-weight: 500;
+            font-size: 1.1em;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        span {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .conclusion-message {
+            text-align: center;
+            font-size: 1.2em;
+            border-left: none;
+            border-bottom: 5px solid #4CAF50;
+        }
+        .conclusion-message p {
+            margin: 0;
+            line-height: 2;
         }
     </style>
 </head>
 <body>
-    <h1>6つの占い診断</h1>
+    <h1><a href="/" title="ホームに戻る">6つの占い診断</a></h1>
     
     <div class="form-container">
         <form id="fortune-form">
             <div class="form-group">
-                <label for="birth-date">生年月日を選択してください：</label>
-                <input type="date" id="birth-date" name="birth-date" required>
+                <label>生年月日を選択してください：</label>
+                <div class="date-select-container">
+                    <select id="birth-year" name="birth-year" required>
+                        <option value="">年</option>
+                    </select>
+                    <select id="birth-month" name="birth-month" required>
+                        <option value="">月</option>
+                    </select>
+                    <select id="birth-day" name="birth-day" required>
+                        <option value="">日</option>
+                    </select>
+                </div>
             </div>
             <button type="submit">診断する</button>
         </form>
     </div>
 
-    <div id="error"></div>
-    <div id="result"></div>
+    <div id="error-area"></div>
+    
+    <div class="loading" id="loading-area">
+        <div class="loading-spinner"></div>
+        <p>診断中...</p>
+    </div>
+
+    <div id="result-area" style="display: none;">
+        <div class="date-display">
+            <p class="date-text"><span id="formatted-date"></span></p>
+        </div>
+
+        <div class="result-section" id="shichuu-result">
+            <div class="fortune-card">
+                <h2>四柱推命は</h2>
+                <div class="fortune-content">
+                    <p>日柱天干： <span id="day-gan"></span></p>
+                    <p>日柱十二運： <span id="twelve-operation"></span></p>
+                    <p>月支の蔵干宿命星： <span id="month-zhi-hidden-gan-destiny-star"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section" id="kyusei-result">
+            <div class="fortune-card">
+                <h2>九星気学は</h2>
+                <div class="fortune-content">
+                    <p>本命星： <span id="honmei"></span></p>
+                    <p>月命星： <span id="gatsumei"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section" id="sukuyo-result">
+            <div class="fortune-card">
+                <h2>宿曜は</h2>
+                <div class="fortune-content">
+                    <p><span id="mansion"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section" id="western-result">
+            <div class="fortune-card">
+                <h2>西洋占星術は</h2>
+                <div class="fortune-content">
+                    <p>太陽： <span id="sun-sign"></span></p>
+                    <p>月： <span id="moon-sign"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section" id="animal-result">
+            <div class="fortune-card">
+                <h2>どうぶつ占いは</h2>
+                <div class="fortune-content">
+                    <p><span id="animal-character"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="result-section" id="inyou-result">
+            <div class="fortune-card">
+                <h2>陰陽五行は</h2>
+                <div class="fortune-content">
+                    <p><span id="gogyo"></span>の<span id="inyo"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="fortune-card conclusion-message">
+            <p>です。こちらが正しいです。<br>記憶して下さい</p>
+        </div>
+    </div>
 
     <script>
+        // 年の選択肢を生成（1900年から現在の年まで）
+        const yearSelect = document.getElementById('birth-year');
+        const currentYear = new Date().getFullYear();
+        for (let year = currentYear; year >= 1900; year--) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = `${year}年`;
+            yearSelect.appendChild(option);
+        }
+
+        // 月の選択肢を生成
+        const monthSelect = document.getElementById('birth-month');
+        for (let month = 1; month <= 12; month++) {
+            const option = document.createElement('option');
+            option.value = month;
+            option.textContent = `${month}月`;
+            monthSelect.appendChild(option);
+        }
+
+        // 日の選択肢を更新する関数
+        function updateDays() {
+            const year = parseInt(yearSelect.value) || currentYear;
+            const month = parseInt(monthSelect.value) || 1;
+            const daySelect = document.getElementById('birth-day');
+            const selectedDay = daySelect.value;
+            
+            // 選択された月の最終日を取得
+            const lastDay = new Date(year, month, 0).getDate();
+            
+            // 日の選択肢をクリアして再生成
+            daySelect.innerHTML = '<option value="">日</option>';
+            for (let day = 1; day <= lastDay; day++) {
+                const option = document.createElement('option');
+                option.value = day;
+                option.textContent = `${day}日`;
+                daySelect.appendChild(option);
+            }
+
+            // 以前選択されていた日が有効範囲内なら再選択
+            if (selectedDay && selectedDay <= lastDay) {
+                daySelect.value = selectedDay;
+            }
+        }
+
+        // 年または月が変更されたら日の選択肢を更新
+        yearSelect.addEventListener('change', updateDays);
+        monthSelect.addEventListener('change', updateDays);
+
+        // フォームの送信処理を更新
         document.getElementById('fortune-form').addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const resultDiv = document.getElementById('result');
-            const errorDiv = document.getElementById('error');
-            resultDiv.innerHTML = '計算中...';
-            errorDiv.innerHTML = '';
+            // ローディング表示を開始
+            document.getElementById('loading-area').style.display = 'block';
+            document.getElementById('result-area').style.display = 'none';
+            
+            const year = document.getElementById('birth-year').value;
+            const month = document.getElementById('birth-month').value;
+            const day = document.getElementById('birth-day').value;
             
             try {
-                const dateInput = document.getElementById('birth-date').value;
-                const [year, month, day] = dateInput.split('-').map(Number);
-                
-                if (!year || !month || !day) {
-                    throw new Error('生年月日を正しく入力してください');
-                }
-                
                 const response = await fetch('/api/predict', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ year, month, day })
+                    body: JSON.stringify({
+                        year: parseInt(year),
+                        month: parseInt(month),
+                        day: parseInt(day)
+                    })
                 });
                 
                 if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `サーバーエラー: ${response.status}`);
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
                 const data = await response.json();
                 
-                // 各占いの結果をチェック
-                let hasError = false;
-                let resultHTML = '';
-                
-                // 四柱推命の結果
-                if (data.shichuu && !data.shichuu.error) {
-                    resultHTML += `
-                        <div class="fortune-section">
-                            <h3>四柱推命</h3>
-                            <pre>${JSON.stringify(data.shichuu, null, 2)}</pre>
-                        </div>`;
-                } else if (data.shichuu && data.shichuu.error) {
-                    hasError = true;
-                    errorDiv.innerHTML += `<p>四柱推命の計算エラー: ${data.shichuu.error}</p>`;
+                if (data.error) {
+                    document.getElementById('error-area').style.display = 'block';
+                    document.getElementById('error-area').textContent = data.error;
+                    return;
                 }
                 
-                // 九星気学の結果
-                if (data.kyusei && !data.kyusei.error) {
-                    resultHTML += `
-                        <div class="fortune-section">
-                            <h3>九星気学</h3>
-                            <p>本命星: ${data.kyusei.honmei}</p>
-                            <p>月命星: ${data.kyusei.gatsumei}</p>
-                        </div>`;
-                } else if (data.kyusei && data.kyusei.error) {
-                    hasError = true;
-                    errorDiv.innerHTML += `<p>九星気学の計算エラー: ${data.kyusei.error}</p>`;
-                }
+                document.getElementById('error-area').style.display = 'none';
+                document.getElementById('error-area').textContent = '';
                 
-                // どうぶつ占いの結果
-                if (data.animal && !data.animal.error) {
-                    resultHTML += `
-                        <div class="fortune-section">
-                            <h3>どうぶつ占い</h3>
-                            <p>${data.animal}</p>
-                        </div>`;
-                } else if (data.animal && data.animal.error) {
-                    hasError = true;
-                    errorDiv.innerHTML += `<p>どうぶつ占いの計算エラー: ${data.animal.error}</p>`;
-                }
+                // 日付表示を更新
+                document.getElementById('formatted-date').textContent = `${year}年${month}月${day}日の`;
+                document.querySelector('.date-display').style.display = 'block';
                 
-                // 陰陽五行の結果
-                if (data.inyou && !data.inyou.error) {
-                    resultHTML += `
-                        <div class="fortune-section">
-                            <h3>陰陽五行</h3>
-                            <pre>${JSON.stringify(data.inyou, null, 2)}</pre>
-                        </div>`;
-                } else if (data.inyou && data.inyou.error) {
-                    hasError = true;
-                    errorDiv.innerHTML += `<p>陰陽五行の計算エラー: ${data.inyou.error}</p>`;
-                }
+                // 結果エリアをクリア
+                document.querySelectorAll('.result-section').forEach(section => {
+                    section.style.display = 'none';
+                });
                 
-                if (!hasError) {
-                    resultDiv.innerHTML = resultHTML;
-                } else if (resultHTML) {
-                    resultDiv.innerHTML = `
-                        <p class="error-message">一部の計算に失敗しました。</p>
-                        ${resultHTML}
-                    `;
-                } else {
-                    resultDiv.innerHTML = '<p class="error-message">計算に失敗しました。</p>';
+                // 四柱推命の結果を表示
+                if (data.shichuu) {
+                    document.getElementById('day-gan').textContent = data.shichuu.day_gan;
+                    document.getElementById('twelve-operation').textContent = data.shichuu.twelve_operation;
+                    document.getElementById('month-zhi-hidden-gan-destiny-star').textContent = data.shichuu.month_zhi_hidden_gan_destiny_star;
+                    document.getElementById('shichuu-result').style.display = 'block';
                 }
-                
+
+                // 九星気学の結果を表示
+                if (data.kyusei) {
+                    document.getElementById('honmei').textContent = data.kyusei.honmei;
+                    document.getElementById('gatsumei').textContent = data.kyusei.gatsumei;
+                    document.getElementById('kyusei-result').style.display = 'block';
+                }
+
+                // 宿曜の結果を表示
+                if (data.sukuyo && data.sukuyo.mansion) {
+                    document.getElementById('mansion').textContent = data.sukuyo.mansion;
+                    document.getElementById('sukuyo-result').style.display = 'block';
+                }
+
+                // 西洋占星術の結果を表示
+                if (data.western) {
+                    document.getElementById('sun-sign').textContent = data.western.sun_sign;
+                    document.getElementById('moon-sign').textContent = data.western.moon_sign;
+                    document.getElementById('western-result').style.display = 'block';
+                }
+
+                // どうぶつ占いの結果を表示
+                if (data.animal) {
+                    document.getElementById('animal-character').textContent = data.animal.animal_character;
+                    document.getElementById('animal-result').style.display = 'block';
+                }
+
+                // 陰陽五行の結果を表示
+                if (data.inyou) {
+                    document.getElementById('gogyo').textContent = data.inyou.gogyo;
+                    document.getElementById('inyo').textContent = data.inyou.inyo;
+                    document.getElementById('inyou-result').style.display = 'block';
+                }
+
+                // ローディング表示を終了
+                document.getElementById('loading-area').style.display = 'none';
+                document.getElementById('result-area').style.display = 'block';
+
             } catch (error) {
-                console.error('Error:', error);
-                errorDiv.innerHTML = `<p class="error">エラーが発生しました: ${error.message}</p>`;
-                resultDiv.innerHTML = '';
+                console.error('エラー:', error);
+                document.getElementById('error-area').style.display = 'block';
+                document.getElementById('error-area').textContent = `エラーが発生しました: ${error.message}`;
+                // エラー時もローディング表示を終了
+                document.getElementById('loading-area').style.display = 'none';
             }
         });
     </script>

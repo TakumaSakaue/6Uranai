@@ -106,15 +106,22 @@ def get_month_pillar(year, month, day, hour=12, minute=0):
     year_eto = get_year_pillar(year, month, day, hour, minute)
     year_kan = year_eto[0]
     month_index = get_month_index(year, month, day, hour, minute)
+    
+    # 年干から寅月の干を取得
     year_to_tora_kan = {
-        '甲': '丙', '乙': '戊', '丙': '庚', '丁': '壬', '戊': '甲',
-        '己': '丙', '庚': '戊', '辛': '庚', '壬': '壬', '癸': '甲'
+        '甲': '丙', '乙': '丁', '丙': '戊', '丁': '己', '戊': '庚',
+        '己': '辛', '庚': '壬', '辛': '癸', '壬': '甲', '癸': '乙'
     }
     tora_kan = year_to_tora_kan[year_kan]
+    
+    # 十干と十二支のリスト
     jikkan = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸']
     junishi = ['寅','卯','辰','巳','午','未','申','酉','戌','亥','子','丑']
+    
+    # 寅月の干から月干を計算
     tora_index = jikkan.index(tora_kan)
     kan_index = (tora_index + month_index - 1) % 10
+    
     return f"{jikkan[kan_index]}{junishi[month_index - 1]}"
 
 # 日柱（1984年1月31日を甲子として計算）
@@ -215,7 +222,7 @@ DESTINY_STAR_MAPPING = {
     },
     "癸": {
         "甲": "傷官", "乙": "食神", "丙": "正財", "丁": "偏財", "戊": "正官", "己": "偏官",
-        "庚": "印綬", "辛": "偏印", "壬": "劫財", "癸": "比肩"
+        "庚": "印綬", "辛": "偏印", "壬": "傷官", "癸": "比肩"
     }
 }
 
@@ -251,16 +258,44 @@ DI_ZHI_HIDDEN_GAN = {
     "亥": ["壬", "甲", None]   # 亥には「壬」「甲」が蔵されている
 }
 
-# 月干の蔵干宿命星を取得（月支の蔵干を考慮）
+# 月干の宿命星を取得
 def get_month_gan_destiny_star(day_pillar, month_pillar):
-    day_gan = day_pillar[0]  # 日柱の天干
-    month_zhi = month_pillar[1]  # 月柱の地支
+    """
+    月干の宿命星を取得する関数
     
-    # 月支の蔵干を取得（主気のみ使用）
-    month_hidden_gan = DI_ZHI_HIDDEN_GAN[month_zhi][0]
+    Args:
+        day_pillar (str): 日柱（例：'甲子'）
+        month_pillar (str): 月柱（例：'丙子'）
+        
+    Returns:
+        str: 月干の宿命星（例：'正財'）
+    """
+    day_gan = day_pillar[0]  # 日干
+    month_gan = month_pillar[0]  # 月干
     
-    # 日干と月支蔵干の組み合わせで宿命星を判定
-    return DESTINY_STAR_MAPPING[day_gan][month_hidden_gan]
+    # 日干と月干から宿命星を取得
+    return DESTINY_STAR_MAPPING[day_gan][month_gan]
+
+# 月支の蔵干宿命星を取得
+def get_month_zhi_hidden_gan_destiny_star(day_pillar, month_pillar):
+    """
+    月支の蔵干の宿命星を取得する関数
+    
+    Args:
+        day_pillar (str): 日柱（例：'甲子'）
+        month_pillar (str): 月柱（例：'丙子'）
+        
+    Returns:
+        str: 月支の蔵干の宿命星（例：'正財'）
+    """
+    day_gan = day_pillar[0]  # 日干
+    month_zhi = month_pillar[1]  # 月支
+    
+    # 月支の蔵干を取得（主気を使用）
+    hidden_gan = DI_ZHI_HIDDEN_GAN[month_zhi][0]
+    
+    # 日干と月支の蔵干から宿命星を取得
+    return DESTINY_STAR_MAPPING[day_gan][hidden_gan]
 
 # 年・月・日柱と重要な要素をまとめて返す
 def get_full_sizhu_info(year, month, day):
@@ -269,36 +304,54 @@ def get_full_sizhu_info(year, month, day):
     month_pillar = get_month_pillar(year, month, day)
     day_pillar = get_day_pillar(year, month, day)
     
-    # 重要な要素を計算
-    day_tian_gan = get_day_tian_gan(day_pillar)
-    day_twelve_operation = get_day_twelve_operation(day_pillar)
+    # 日干を取得
+    day_gan = get_day_tian_gan(day_pillar)
+    
+    # 十二運を取得
+    twelve_operation = get_day_twelve_operation(day_pillar)
+    
+    # 月干の宿命星を取得
     month_gan_destiny_star = get_month_gan_destiny_star(day_pillar, month_pillar)
+    
+    # 月支の蔵干宿命星を取得
+    month_zhi_hidden_gan_destiny_star = get_month_zhi_hidden_gan_destiny_star(day_pillar, month_pillar)
     
     return {
         "year_pillar": year_pillar,
         "month_pillar": month_pillar,
         "day_pillar": day_pillar,
-        "day_tian_gan": day_tian_gan,
-        "day_twelve_operation": day_twelve_operation,
-        "month_gan_destiny_star": month_gan_destiny_star
+        "day_gan": day_gan,
+        "twelve_operation": twelve_operation,
+        "month_gan_destiny_star": month_gan_destiny_star,
+        "month_zhi_hidden_gan_destiny_star": month_zhi_hidden_gan_destiny_star
     }
 
 def calculate_shichuu(year, month, day):
     """
     四柱推命の計算を行う関数
+    
+    Args:
+        year (int): 生年
+        month (int): 生月
+        day (int): 生日
+        
+    Returns:
+        dict: 四柱推命の結果
     """
     try:
-        # 四柱推命の情報を取得
+        # 四柱の情報を取得
         sizhu_info = get_full_sizhu_info(year, month, day)
         
         # 結果を返す
         return {
-            "day_tian_gan": sizhu_info["day_tian_gan"],
-            "day_twelve_operation": sizhu_info["day_twelve_operation"],
-            "month_gan_destiny_star": sizhu_info["month_gan_destiny_star"]
+            "day_gan": sizhu_info["day_gan"],
+            "twelve_operation": sizhu_info["twelve_operation"],
+            "month_gan_destiny_star": sizhu_info["month_gan_destiny_star"],
+            "month_zhi_hidden_gan_destiny_star": sizhu_info["month_zhi_hidden_gan_destiny_star"]
         }
+        
     except Exception as e:
-        print(f"四柱推命の計算でエラーが発生しました: {e}")
+        print(f"四柱推命計算エラー: {e}")
         return None
 
 # テスト実行
