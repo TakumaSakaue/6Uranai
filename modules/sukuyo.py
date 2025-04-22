@@ -57,18 +57,12 @@ def calculate_sukuyo(year, month, day):
         dict: 計算結果を含む辞書
     """
     try:
-        # qreki ライブラリで旧暦結果を取得
+        # koyomi ライブラリで旧暦結果を取得
         kyureki = Kyureki.from_ymd(year, month, day)
-        kyureki_str = str(kyureki)
         
-        # 旧暦の月日を抽出
-        old_day = extract_old_day(kyureki_str)
-        lunar_month = extract_old_month(kyureki_str)
-        
-        if old_day is None or lunar_month is None:
-            return {
-                "mansion": "不明"
-            }
+        # 旧暦の月日を取得
+        old_day = kyureki.day
+        lunar_month = kyureki.month
         
         # 宿曜を計算
         mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
