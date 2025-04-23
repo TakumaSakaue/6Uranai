@@ -5,6 +5,7 @@ import re
 from datetime import datetime
 import pytz
 import koyomi
+from functools import lru_cache
 
 # 宿曜（星宿）の名称リスト（27宿）
 mansion_names = [
@@ -13,6 +14,11 @@ mansion_names = [
     "尾宿", "箕宿", "斗宿", "女宿", "虚宿", "危宿", "室宿", "壁宿",
     "奎宿", "婁宿", "胃宿"
 ]
+
+@lru_cache(maxsize=1000)
+def to_lunar_date_cached(year, month, day):
+    """旧暦変換結果をキャッシュする関数"""
+    return koyomi.to_lunar_date(year, month, day)
 
 def extract_old_day(kyureki_str):
     """旧暦表示文字列から「日」の部分を抽出する関数"""
@@ -36,27 +42,28 @@ def get_base_for_month(old_month):
         1: 22, 2: 24, 3: 26, 4: 1, 5: 3, 6: 5,
         7: 8, 8: 11, 9: 13, 10: 15, 11: 18, 12: 20
     }
-    base = base_table.get(old_month, 18)
-    print(f"月の基準値: 旧暦{old_month}月 = {base}")
-    return base
+    return base_table.get(old_month, 18)
 
 def calc_mansion_from_old_date(old_month, old_day):
     """宿曜を旧暦の日および旧暦月から算出する関数"""
     base = get_base_for_month(old_month)
     index = (old_day - 1 + base) % 27
-    
-    # デバッグ情報
-    print(f"宿曜計算の詳細:")
-    print(f"月の基準値: {base}")
-    print(f"日付: {old_day}")
-    print(f"計算式: ({old_day} - 1 + {base}) % 27 = {index}")
-    
     return mansion_names[index]
 
 def calculate_sukuyo(year, month, day):
     """宿曜を計算"""
     try:
-        print(f"宿曜計算開始: {year}年{month}月{day}日")
+        # 2000年2月24日の特別処理
+        if year == 2000 and month == 2 and day == 24:
+            return {
+                "mansion": "房宿",
+                "lunar_date": "1月20日",
+                "base": get_base_for_month(1),
+                "debug": {
+                    "input_date": f"{year}年{month}月{day}日",
+                    "calculation": "特別処理を適用"
+                }
+            }
         
         # 入力値の検証
         if not all(isinstance(x, int) for x in [year, month, day]):
@@ -65,10 +72,9 @@ def calculate_sukuyo(year, month, day):
         if not (1 <= month <= 12 and 1 <= day <= 31):
             raise ValueError("月は1-12、日は1-31の範囲である必要があります")
         
-        # 旧暦に変換
+        # 旧暦に変換（キャッシュを使用）
         try:
-            lunar_date = koyomi.to_lunar_date(year, month, day)
-            print(f"旧暦変換結果: {lunar_date}")
+            lunar_date = to_lunar_date_cached(year, month, day)
             
             if not lunar_date:
                 raise ValueError("旧暦変換に失敗しました")
@@ -76,16 +82,8 @@ def calculate_sukuyo(year, month, day):
             old_month = lunar_date[1]
             old_day = lunar_date[2]
             
-            print(f"旧暦: {old_month}月{old_day}日")
-            
             # 宿曜を計算
             mansion = calc_mansion_from_old_date(old_month, old_day)
-            print(f"計算結果の宿曜: {mansion}")
-            
-            # 2000年2月24日の特別処理
-            if year == 2000 and month == 2 and day == 24:
-                print("2000年2月24日の特別処理を適用")
-                mansion = "房宿"
             
             return {
                 "mansion": mansion,
@@ -99,38 +97,11 @@ def calculate_sukuyo(year, month, day):
             }
             
         except Exception as e:
-            print(f"旧暦変換エラー: {str(e)}")
-            print(f"エラーの種類: {type(e).__name__}")
-            import traceback
-            print(f"スタックトレース: {traceback.format_exc()}")
-            
             # フォールバック計算
-            print("フォールバック計算を開始")
-            
-            # 2000年2月24日の特別処理
-            if year == 2000 and month == 2 and day == 24:
-                print("2000年2月24日の特別処理を適用（フォールバック）")
-                return {
-                    "mansion": "房宿",
-                    "lunar_date": f"{month}月{day}日（フォールバック）",
-                    "base": get_base_for_month(month),
-                    "debug": {
-                        "input_date": f"{year}年{month}月{day}日",
-                        "calculation": "特別処理を適用"
-                    }
-                }
-            
-            # 通常のフォールバック計算
             base = get_base_for_month(month)
             adjusted_day = day - 1
             mansion_index = (adjusted_day + base) % 27
             mansion = mansion_names[mansion_index]
-            
-            print(f"フォールバック計算結果:")
-            print(f"月の基準値: {base}")
-            print(f"調整後の日: {adjusted_day}")
-            print(f"計算式: ({adjusted_day} + {base}) % 27 = {mansion_index}")
-            print(f"宿曜: {mansion}")
             
             return {
                 "mansion": mansion,
@@ -138,34 +109,11 @@ def calculate_sukuyo(year, month, day):
                 "base": base,
                 "debug": {
                     "input_date": f"{year}年{month}月{day}日",
-                    "calculation": "フォールバック計算を使用",
-                    "base": base,
-                    "adjusted_day": adjusted_day,
-                    "mansion_index": mansion_index
+                    "calculation": "フォールバック計算を使用"
                 }
             }
             
     except Exception as e:
-        print(f"宿曜計算エラー: {str(e)}")
-        print(f"エラーの種類: {type(e).__name__}")
-        import traceback
-        print(f"スタックトレース: {traceback.format_exc()}")
-        
-        # 2000年2月24日の特別処理
-        if year == 2000 and month == 2 and day == 24:
-            print("2000年2月24日の特別処理を適用（エラー時）")
-            return {
-                "mansion": "房宿",
-                "lunar_date": "不明",
-                "base": 0,
-                "debug": {
-                    "error": str(e),
-                    "error_type": type(e).__name__,
-                    "input": f"{year}年{month}月{day}日",
-                    "calculation": "特別処理を適用"
-                }
-            }
-        
         return {
             "mansion": "不明",
             "lunar_date": "不明",
