@@ -1,0 +1,4 @@
+cron:
+  - name: ping-app
+    schedule: "*/5 * * * *"  # 5分ごとに実行
+    command: curl -X GET https://uranai-tt1uc.kinsta.app/ping 
