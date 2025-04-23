@@ -34,21 +34,21 @@ def get_base_for_month(old_month):
     """月の基準値を取得（修正版）"""
     # 月の基準値テーブル（修正版）
     base_table = {
-        1: 0,   # 正月
-        2: 2,   # 2月
-        3: 4,   # 3月
-        4: 6,   # 4月
-        5: 8,   # 5月
-        6: 10,  # 6月
-        7: 12,  # 7月
-        8: 14,  # 8月
-        9: 16,  # 9月
-        10: 18, # 10月
-        11: 20, # 11月
-        12: 22  # 12月
+        1: 22,  # 正月
+        2: 24,  # 2月
+        3: 26,  # 3月
+        4: 1,   # 4月
+        5: 3,   # 5月
+        6: 5,   # 6月
+        7: 8,   # 7月
+        8: 11,  # 8月
+        9: 13,  # 9月
+        10: 15, # 10月
+        11: 18, # 11月
+        12: 20  # 12月
     }
     
-    base = base_table.get(old_month, 0)
+    base = base_table.get(old_month, 18)
     print(f"月の基準値: 旧暦{old_month}月 = {base}")
     return base
 
@@ -62,13 +62,13 @@ def calc_mansion_from_old_date(old_month, old_day):
     
     # 宿曜の計算（修正版）
     # 月の基準値に日数を加算し、27で割った余りを取得
-    mansion_index = (base + adjusted_day) % 27
+    mansion_index = (adjusted_day + base) % 27
     
     # デバッグ情報
     print(f"宿曜計算の詳細:")
     print(f"月の基準値: {base}")
     print(f"調整後の日: {adjusted_day}")
-    print(f"計算式: ({base} + {adjusted_day}) % 27 = {mansion_index}")
+    print(f"計算式: ({adjusted_day} + {base}) % 27 = {mansion_index}")
     
     return mansion_names[mansion_index]
 
