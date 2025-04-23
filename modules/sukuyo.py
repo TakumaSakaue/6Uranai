@@ -30,120 +30,138 @@ def extract_old_month(kyureki_str):
     else:
         return None
 
-def get_base_for_month(lunar_month):
-    """旧暦月ごとのキャリブレーション値（base値）のテーブル"""
+def get_base_for_month(old_month):
+    """月の基準値を取得（修正版）"""
+    # 月の基準値テーブル（修正版）
     base_table = {
-        1: 22, 2: 24, 3: 26, 4: 1, 5: 3, 6: 5,
-        7: 8, 8: 11, 9: 13, 10: 15, 11: 18, 12: 20
+        1: 0,   # 正月
+        2: 2,   # 2月
+        3: 4,   # 3月
+        4: 6,   # 4月
+        5: 8,   # 5月
+        6: 10,  # 6月
+        7: 12,  # 7月
+        8: 14,  # 8月
+        9: 16,  # 9月
+        10: 18, # 10月
+        11: 20, # 11月
+        12: 22  # 12月
     }
-    return base_table.get(lunar_month, 18)
+    
+    base = base_table.get(old_month, 0)
+    print(f"月の基準値: 旧暦{old_month}月 = {base}")
+    return base
 
-def calc_mansion_from_old_date(lunar_day, lunar_month):
-    """宿曜を旧暦の日および旧暦月から算出する関数"""
-    base = get_base_for_month(lunar_month)
-    index = (lunar_day - 1 + base) % 27
-    return mansion_names[index], base
+def calc_mansion_from_old_date(old_month, old_day):
+    """旧暦の月日から宿曜を計算"""
+    # 月の基準値（修正版）
+    base = get_base_for_month(old_month)
+    
+    # 日付を1から始まるように調整
+    adjusted_day = old_day - 1
+    
+    # 宿曜の計算（修正版）
+    # 月の基準値に日数を加算し、27で割った余りを取得
+    mansion_index = (base + adjusted_day) % 27
+    
+    # デバッグ情報
+    print(f"宿曜計算の詳細:")
+    print(f"月の基準値: {base}")
+    print(f"調整後の日: {adjusted_day}")
+    print(f"計算式: ({base} + {adjusted_day}) % 27 = {mansion_index}")
+    
+    return mansion_names[mansion_index]
 
 def calculate_sukuyo(year, month, day):
-    """
-    西暦日付から宿曜を計算
-    
-    Args:
-        year (int): 西暦年
-        month (int): 月
-        day (int): 日
-    
-    Returns:
-        dict: 計算結果を含む辞書
-    """
+    """宿曜を計算"""
     try:
-        print(f"宿曜計算開始: {year}年{month}月{day}日")  # デバッグ出力
+        print(f"宿曜計算開始: {year}年{month}月{day}日")
         
         # 入力値の検証
-        if not isinstance(year, int) or not isinstance(month, int) or not isinstance(day, int):
+        if not all(isinstance(x, int) for x in [year, month, day]):
             raise ValueError("年月日は整数である必要があります")
         
-        if month < 1 or month > 12:
-            raise ValueError("月は1から12の間である必要があります")
+        if not (1 <= month <= 12 and 1 <= day <= 31):
+            raise ValueError("月は1-12、日は1-31の範囲である必要があります")
         
-        if day < 1 or day > 31:
-            raise ValueError("日は1から31の間である必要があります")
-        
-        # koyomi ライブラリで旧暦結果を取得
+        # 旧暦に変換
         try:
-            # koyomiライブラリのバージョンを確認
-            print(f"koyomiバージョン: {koyomi.__version__ if hasattr(koyomi, '__version__') else '不明'}")
-            
-            # 旧暦変換
             lunar_date = koyomi.to_lunar_date(year, month, day)
-            print(f"旧暦変換結果: {lunar_date}")  # デバッグ出力
+            print(f"旧暦変換結果: {lunar_date}")
             
-            # 旧暦の月日を取得
-            old_day = int(lunar_date.day)
-            lunar_month = int(lunar_date.month)
-            print(f"旧暦日付: {lunar_month}月{old_day}日")  # デバッグ出力
+            if not lunar_date:
+                raise ValueError("旧暦変換に失敗しました")
+            
+            old_month = lunar_date[1]
+            old_day = lunar_date[2]
+            
+            print(f"旧暦: {old_month}月{old_day}日")
             
             # 宿曜を計算
-            mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
-            print(f"宿曜計算結果: mansion={mansion}, base={base}")  # デバッグ出力
+            mansion = calc_mansion_from_old_date(old_month, old_day)
+            print(f"計算結果の宿曜: {mansion}")
             
-            result = {
+            return {
                 "mansion": mansion,
-                "lunar_date": f"{lunar_date.year}年{lunar_month}月{old_day}日",
-                "base": base,
-                "debug_info": {
+                "lunar_date": f"{old_month}月{old_day}日",
+                "base": get_base_for_month(old_month),
+                "debug": {
                     "input_date": f"{year}年{month}月{day}日",
-                    "lunar_date": str(lunar_date),
-                    "calculation": f"index = ({old_day} - 1 + {base}) % 27 = {(old_day - 1 + base) % 27}"
+                    "lunar_date": f"{old_month}月{old_day}日",
+                    "calculation": "正常に計算完了"
                 }
             }
-            print(f"最終結果: {result}")  # デバッグ出力
-            return result
             
         except Exception as e:
-            print(f"旧暦変換エラー: {str(e)}")  # デバッグ出力
-            print(f"エラーの詳細: {type(e).__name__}")  # デバッグ出力
+            print(f"旧暦変換エラー: {str(e)}")
+            print(f"エラーの種類: {type(e).__name__}")
             import traceback
-            print(f"スタックトレース: {traceback.format_exc()}")  # デバッグ出力
+            print(f"スタックトレース: {traceback.format_exc()}")
             
-            # 代替計算方法を試す
-            try:
-                print("代替計算方法を試行します...")
-                # 簡易的な旧暦変換（近似値）
-                lunar_month = month
-                old_day = day
-                
-                # 宿曜を計算
-                mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
-                print(f"代替計算結果: mansion={mansion}, base={base}")  # デバッグ出力
-                
-                result = {
-                    "mansion": mansion,
-                    "lunar_date": f"{year}年{lunar_month}月{old_day}日（近似値）",
+            # フォールバック計算（修正版）
+            print("フォールバック計算を開始")
+            
+            # 月の基準値を計算
+            base = get_base_for_month(month)
+            
+            # 日付を1から始まるように調整
+            adjusted_day = day - 1
+            
+            # 宿曜を計算
+            mansion_index = (base + adjusted_day) % 27
+            mansion = mansion_names[mansion_index]
+            
+            print(f"フォールバック計算結果:")
+            print(f"月の基準値: {base}")
+            print(f"調整後の日: {adjusted_day}")
+            print(f"計算式: ({base} + {adjusted_day}) % 27 = {mansion_index}")
+            print(f"宿曜: {mansion}")
+            
+            return {
+                "mansion": mansion,
+                "lunar_date": f"{month}月{day}日（フォールバック）",
+                "base": base,
+                "debug": {
+                    "input_date": f"{year}年{month}月{day}日",
+                    "calculation": "フォールバック計算を使用",
                     "base": base,
-                    "debug_info": {
-                        "input_date": f"{year}年{month}月{day}日",
-                        "note": "koyomiライブラリエラーのため近似値を使用",
-                        "calculation": f"index = ({old_day} - 1 + {base}) % 27 = {(old_day - 1 + base) % 27}"
-                    }
+                    "adjusted_day": adjusted_day,
+                    "mansion_index": mansion_index
                 }
-                print(f"代替最終結果: {result}")  # デバッグ出力
-                return result
-                
-            except Exception as e2:
-                print(f"代替計算エラー: {str(e2)}")  # デバッグ出力
-                raise
-        
+            }
+            
     except Exception as e:
-        print(f"宿曜計算エラー: {str(e)}")  # デバッグ出力
-        print(f"エラーの詳細: {type(e).__name__}")  # デバッグ出力
+        print(f"宿曜計算エラー: {str(e)}")
+        print(f"エラーの種類: {type(e).__name__}")
         import traceback
-        print(f"スタックトレース: {traceback.format_exc()}")  # デバッグ出力
+        print(f"スタックトレース: {traceback.format_exc()}")
         return {
-            "error": f"計算エラー: {str(e)}",
             "mansion": "不明",
-            "debug_info": {
+            "lunar_date": "不明",
+            "base": 0,
+            "debug": {
+                "error": str(e),
                 "error_type": type(e).__name__,
-                "input_date": f"{year}年{month}月{day}日"
+                "input": f"{year}年{month}月{day}日"
             }
         } 
