@@ -4,8 +4,8 @@ import os
 # ワーカー数の設定（CPU数に基づく）
 workers = multiprocessing.cpu_count() * 2 + 1
 
-# ワーカークラスの設定
-worker_class = 'gevent'
+# ワーカークラスの設定（標準のsyncワーカーを使用）
+worker_class = 'sync'
 
 # タイムアウト設定
 timeout = 60
