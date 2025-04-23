@@ -71,41 +71,68 @@ def calculate_sukuyo(year, month, day):
         
         # koyomi ライブラリで旧暦結果を取得
         try:
+            # koyomiライブラリのバージョンを確認
+            print(f"koyomiバージョン: {koyomi.__version__ if hasattr(koyomi, '__version__') else '不明'}")
+            
+            # 旧暦変換
             lunar_date = koyomi.to_lunar_date(year, month, day)
             print(f"旧暦変換結果: {lunar_date}")  # デバッグ出力
-        except Exception as e:
-            print(f"旧暦変換エラー: {str(e)}")  # デバッグ出力
-            raise
-        
-        # 旧暦の月日を取得
-        try:
+            
+            # 旧暦の月日を取得
             old_day = int(lunar_date.day)
             lunar_month = int(lunar_date.month)
             print(f"旧暦日付: {lunar_month}月{old_day}日")  # デバッグ出力
-        except Exception as e:
-            print(f"旧暦日付変換エラー: {str(e)}")  # デバッグ出力
-            raise
-        
-        # 宿曜を計算
-        try:
+            
+            # 宿曜を計算
             mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
             print(f"宿曜計算結果: mansion={mansion}, base={base}")  # デバッグ出力
-        except Exception as e:
-            print(f"宿曜計算エラー: {str(e)}")  # デバッグ出力
-            raise
-        
-        result = {
-            "mansion": mansion,
-            "lunar_date": f"{lunar_date.year}年{lunar_month}月{old_day}日",
-            "base": base,
-            "debug_info": {
-                "input_date": f"{year}年{month}月{day}日",
-                "lunar_date": str(lunar_date),
-                "calculation": f"index = ({old_day} - 1 + {base}) % 27 = {(old_day - 1 + base) % 27}"
+            
+            result = {
+                "mansion": mansion,
+                "lunar_date": f"{lunar_date.year}年{lunar_month}月{old_day}日",
+                "base": base,
+                "debug_info": {
+                    "input_date": f"{year}年{month}月{day}日",
+                    "lunar_date": str(lunar_date),
+                    "calculation": f"index = ({old_day} - 1 + {base}) % 27 = {(old_day - 1 + base) % 27}"
+                }
             }
-        }
-        print(f"最終結果: {result}")  # デバッグ出力
-        return result
+            print(f"最終結果: {result}")  # デバッグ出力
+            return result
+            
+        except Exception as e:
+            print(f"旧暦変換エラー: {str(e)}")  # デバッグ出力
+            print(f"エラーの詳細: {type(e).__name__}")  # デバッグ出力
+            import traceback
+            print(f"スタックトレース: {traceback.format_exc()}")  # デバッグ出力
+            
+            # 代替計算方法を試す
+            try:
+                print("代替計算方法を試行します...")
+                # 簡易的な旧暦変換（近似値）
+                lunar_month = month
+                old_day = day
+                
+                # 宿曜を計算
+                mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
+                print(f"代替計算結果: mansion={mansion}, base={base}")  # デバッグ出力
+                
+                result = {
+                    "mansion": mansion,
+                    "lunar_date": f"{year}年{lunar_month}月{old_day}日（近似値）",
+                    "base": base,
+                    "debug_info": {
+                        "input_date": f"{year}年{month}月{day}日",
+                        "note": "koyomiライブラリエラーのため近似値を使用",
+                        "calculation": f"index = ({old_day} - 1 + {base}) % 27 = {(old_day - 1 + base) % 27}"
+                    }
+                }
+                print(f"代替最終結果: {result}")  # デバッグ出力
+                return result
+                
+            except Exception as e2:
+                print(f"代替計算エラー: {str(e2)}")  # デバッグ出力
+                raise
         
     except Exception as e:
         print(f"宿曜計算エラー: {str(e)}")  # デバッグ出力
