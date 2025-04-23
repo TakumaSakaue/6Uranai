@@ -59,18 +59,40 @@ def calculate_sukuyo(year, month, day):
     try:
         print(f"宿曜計算開始: {year}年{month}月{day}日")  # デバッグ出力
         
+        # 入力値の検証
+        if not isinstance(year, int) or not isinstance(month, int) or not isinstance(day, int):
+            raise ValueError("年月日は整数である必要があります")
+        
+        if month < 1 or month > 12:
+            raise ValueError("月は1から12の間である必要があります")
+        
+        if day < 1 or day > 31:
+            raise ValueError("日は1から31の間である必要があります")
+        
         # koyomi ライブラリで旧暦結果を取得
-        lunar_date = koyomi.to_lunar_date(year, month, day)
-        print(f"旧暦変換結果: {lunar_date}")  # デバッグ出力
+        try:
+            lunar_date = koyomi.to_lunar_date(year, month, day)
+            print(f"旧暦変換結果: {lunar_date}")  # デバッグ出力
+        except Exception as e:
+            print(f"旧暦変換エラー: {str(e)}")  # デバッグ出力
+            raise
         
         # 旧暦の月日を取得
-        old_day = int(lunar_date.day)
-        lunar_month = int(lunar_date.month)
-        print(f"旧暦日付: {lunar_month}月{old_day}日")  # デバッグ出力
+        try:
+            old_day = int(lunar_date.day)
+            lunar_month = int(lunar_date.month)
+            print(f"旧暦日付: {lunar_month}月{old_day}日")  # デバッグ出力
+        except Exception as e:
+            print(f"旧暦日付変換エラー: {str(e)}")  # デバッグ出力
+            raise
         
         # 宿曜を計算
-        mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
-        print(f"宿曜計算結果: mansion={mansion}, base={base}")  # デバッグ出力
+        try:
+            mansion, base = calc_mansion_from_old_date(old_day, lunar_month)
+            print(f"宿曜計算結果: mansion={mansion}, base={base}")  # デバッグ出力
+        except Exception as e:
+            print(f"宿曜計算エラー: {str(e)}")  # デバッグ出力
+            raise
         
         result = {
             "mansion": mansion,
