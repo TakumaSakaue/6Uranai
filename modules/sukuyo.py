@@ -34,21 +34,21 @@ def get_base_for_month(old_month):
     """月の基準値を取得（修正版）"""
     # 月の基準値テーブル（修正版）
     base_table = {
-        1: 11,  # 正月
-        2: 13,  # 2月
-        3: 15,  # 3月
-        4: 17,  # 4月
-        5: 19,  # 5月
-        6: 21,  # 6月
-        7: 23,  # 7月
-        8: 25,  # 8月
-        9: 0,   # 9月
-        10: 2,  # 10月
-        11: 4,  # 11月
-        12: 6   # 12月
+        1: 0,   # 正月
+        2: 2,   # 2月
+        3: 4,   # 3月
+        4: 6,   # 4月
+        5: 8,   # 5月
+        6: 10,  # 6月
+        7: 12,  # 7月
+        8: 14,  # 8月
+        9: 16,  # 9月
+        10: 18, # 10月
+        11: 20, # 11月
+        12: 22  # 12月
     }
     
-    base = base_table.get(old_month, 11)  # デフォルト値を11に設定
+    base = base_table.get(old_month, 0)
     print(f"月の基準値: 旧暦{old_month}月 = {base}")
     return base
 
@@ -58,7 +58,7 @@ def calc_mansion_from_old_date(old_month, old_day):
     base = get_base_for_month(old_month)
     
     # 日付を調整（1から始まるように）
-    adjusted_day = old_day
+    adjusted_day = old_day - 1
     
     # 宿曜の計算
     # 基準値に日数を加算し、27で割った余りを取得
